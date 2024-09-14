@@ -14,8 +14,49 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Page, Text, View, Document, StyleSheet, ReactPDF } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 
+
+
+
+// Estilos para el PDF
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#E4E4E4',
+    padding: 30,
+  },
+  section: {
+    margin: 10,
+    padding: 10,
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  field: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+});
+
+// Componente para generar el PDF
+const MyDocument = ({ data }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text style={styles.title}>Datos del Formulario</Text>
+        {Object.entries(data).map(([key, value]) => (
+          <Text key={key} style={styles.field}>
+            {key}: {value}
+          </Text>
+        ))}
+      </View>
+    </Page>
+  </Document>
+);
 // Define el esquema de validación
 const formSchema = z.object({
   name: z
@@ -39,6 +80,7 @@ const formSchema = z.object({
 
 export default function FormularioLargo() {
   const [activeTab, setActiveTab] = useState('datosPersonales');
+  const [formData, setFormData] = useState(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -54,44 +96,24 @@ export default function FormularioLargo() {
 
   function onSubmit(values) {
     console.log(values);
-    ReactPDF.render(<MyDocument />, `${__dirname}/example.pdf`);
+    setFormData(values);
+    
+    
   }
+  const generatePDF = async () => {
+    if (!formData) return;
 
-  // Estilos para el PDF
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: 'column',
-    backgroundColor: '#E4E4E4',
-    padding: 30,
-  },
-  section: {
-    margin: 10,
-    padding: 10,
-    flexGrow: 1,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 10,
-  },
-  field: {
-    fontSize: 12,
-    marginBottom: 5,
-  },
-});
+    const blob = await pdf(<MyDocument data={formData} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'formulario.pdf';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  
 
-// Create Document Component
-const MyDocument = () => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        <Text>Section #1</Text>
-      </View>
-      <View style={styles.section}>
-        <Text>Section #2</Text>
-      </View>
-    </Page>
-  </Document>
-);
+ 
  
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -115,7 +137,7 @@ const MyDocument = () => (
               <TabsContent value="datosPersonales" className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="nombreCompleto"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nombre Completo</FormLabel>
@@ -141,7 +163,7 @@ const MyDocument = () => (
                 />
                 <FormField
                   control={form.control}
-                  name="telefono"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Teléfono</FormLabel>
@@ -156,7 +178,7 @@ const MyDocument = () => (
               <TabsContent value="direccion" className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="direccion"
+                  name="address"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Dirección</FormLabel>
@@ -169,7 +191,7 @@ const MyDocument = () => (
                 />
                 <FormField
                   control={form.control}
-                  name="ciudad"
+                  name="city"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
@@ -182,7 +204,7 @@ const MyDocument = () => (
                 />
                 <FormField
                   control={form.control}
-                  name="codigoPostal"
+                  name="zipcode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Código Postal</FormLabel>
@@ -195,9 +217,10 @@ const MyDocument = () => (
                 />
               </TabsContent>
             </Tabs>
-            <Button type="submit" className="w-full">
-              Enviar
-            </Button>
+            <Button type="submit">Enviar</Button>
+            {formData && (
+          <Button onClick={generatePDF}>Descargar PDF</Button>
+        )}
           </form>
         </Form>
       </div>
