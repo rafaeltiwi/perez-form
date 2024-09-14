@@ -14,23 +14,24 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Page, Text, View, Document, StyleSheet, ReactPDF } from '@react-pdf/renderer';
 
 // Define el esquema de validación
 const formSchema = z.object({
-  nombreCompleto: z
+  name: z
     .string()
     .min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
   email: z.string().email({ message: 'Email inválido.' }),
-  telefono: z
+  phone: z
     .string()
     .min(10, { message: 'El teléfono debe tener al menos 10 dígitos.' }),
-  direccion: z
+  address: z
     .string()
     .min(5, { message: 'La dirección debe tener al menos 5 caracteres.' }),
-  ciudad: z
+  city: z
     .string()
     .min(2, { message: 'La ciudad debe tener al menos 2 caracteres.' }),
-  codigoPostal: z
+  zipcode: z
     .string()
     .min(5, { message: 'El código postal debe tener al menos 5 caracteres.' }),
   // Añade más campos según sea necesario
@@ -42,18 +43,56 @@ export default function FormularioLargo() {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nombreCompleto: '',
+      name: '',
       email: '',
-      telefono: '',
-      direccion: '',
-      ciudad: '',
-      codigoPostal: '',
+      phone: '',
+      address: '',
+      city: '',
+      zipcode: '',
     },
   });
 
   function onSubmit(values) {
     console.log(values);
+    ReactPDF.render(<MyDocument />, `${__dirname}/example.pdf`);
   }
+
+  // Estilos para el PDF
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#E4E4E4',
+    padding: 30,
+  },
+  section: {
+    margin: 10,
+    padding: 10,
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  field: {
+    fontSize: 12,
+    marginBottom: 5,
+  },
+});
+
+// Create Document Component
+const MyDocument = () => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.section}>
+        <Text>Section #1</Text>
+      </View>
+      <View style={styles.section}>
+        <Text>Section #2</Text>
+      </View>
+    </Page>
+  </Document>
+);
+ 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-4 bg-white rounded-xl shadow-md">
